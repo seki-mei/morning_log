@@ -75,7 +75,6 @@ h1 {
 	display: flex;
 	align-items: stretch;
 	margin-bottom: 1.5rem;
-	gap: 0;
 }
 
 .step-node {
@@ -146,34 +145,6 @@ h1 {
 .step-node.active .step-name { color: var(--gvb-aqua2); }
 .step-node.done .step-name  { color: var(--gvb-green2); }
 
-.step-time {
-	font-size: 0.65rem;
-	color: var(--gvb-aqua2);
-	margin-top: 0.15rem;
-	font-family: 'JetBrains Mono', monospace;
-	text-align: center;
-}
-
-.step-seg {
-	position: absolute;
-	top: 0.05rem;
-	left: 50%;
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	pointer-events: none;
-	z-index: 2;
-}
-
-.step-seg span {
-	font-size: 0.52rem;
-	font-family: 'JetBrains Mono', monospace;
-	color: var(--gvb-fg4);
-	background: var(--gvb-bg0);
-	padding: 0 0.25rem;
-	white-space: nowrap;
-}
 
 /* ── Main card ── */
 .card {
@@ -227,7 +198,6 @@ h1 {
 .logged-times {
 	display: flex;
 	flex-direction: column;
-	gap: 0;
 	margin-bottom: 1.3rem;
 	border: 1px solid var(--gvb-bg2);
 	border-radius: 2px;
@@ -247,7 +217,6 @@ h1 {
 .time-row:last-child { border-bottom: none; }
 .time-row .label { color: var(--gvb-fg4); flex-shrink: 1; min-width: 0; margin-right: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .time-row .val { color: var(--gvb-fg4); font-weight: 400; flex-shrink: 0; white-space: nowrap; font-size: 0.72rem; }
-.time-row .dur { font-size: 0.68rem; color: var(--gvb-fg4); margin-left: 0.4rem; }
 
 .dur-row {
 	display: flex;
@@ -263,7 +232,6 @@ h1 {
 }
 .dur-row span:last-child { color: var(--gvb-fg1); }
 .dur-row:last-child { border-bottom: none; }
-.logged-times > div:nth-child(odd)  { background: var(--gvb-bg0_s); }
 .logged-times > div:nth-child(even) { background: var(--gvb-bg1); }
 
 .restored-badge {
@@ -325,7 +293,7 @@ h1 {
 	background: var(--gvb-bg2);
 	color: var(--gvb-fg3);
 	cursor: pointer;
-	transition: all 0.1s;
+	transition: background 0.1s, border-color 0.1s, color 0.1s;
 	-webkit-tap-highlight-color: transparent;
 }
 
@@ -410,11 +378,6 @@ h1 {
 	margin-bottom: 0.8rem;
 }
 
-.success-card p {
-	font-size: 0.75rem;
-	color: var(--gvb-fg4);
-	line-height: 1.9;
-}
 
 .toast {
 	position: fixed;

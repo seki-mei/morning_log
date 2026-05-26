@@ -9,7 +9,7 @@ import csv
 import json
 import mimetypes
 import os
-from datetime import datetime, date, timezone
+from datetime import datetime, date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -60,7 +60,7 @@ def delete_session():
 
 def append_row(data: dict):
     def parse_local(iso):
-        return datetime.fromisoformat(iso).astimezone()
+        return datetime.fromisoformat(iso)
 
     def hhmm(iso):
         return parse_local(iso).strftime("%H:%M")

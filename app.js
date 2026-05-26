@@ -193,8 +193,17 @@ function startClock() {
 	clockInterval = setInterval(tick, 1000);
 }
 
+function localISO() {
+	const d = new Date();
+	const off = -d.getTimezoneOffset();
+	const sign = off >= 0 ? '+' : '-';
+	const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
+	return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, -1)
+		+ sign + pad(off / 60) + ':' + pad(off % 60);
+}
+
 async function logStep() {
-	const now = new Date().toISOString();
+	const now = localISO();
 	if (state.times.length < 2) {
 		state.times.push(now);
 		state.restored = false;
