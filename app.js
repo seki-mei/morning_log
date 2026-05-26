@@ -33,25 +33,9 @@ function localISO() {
 		+ sign + pad(off / 60) + ':' + pad(off % 60);
 }
 
-function renderTrack() {
-	const track = document.getElementById('stepTrack');
-	if (state.done) { track.innerHTML = ''; return; }
-	const step = state.times.length;
-	track.innerHTML = STEP_NAMES.map((name, i) => {
-		const cls = i < step ? 'done' : i === step ? 'active' : '';
-		const check = i < step ? '✓' : (i + 1).toString();
-		return `<div class="step-node ${cls}">
-			<div class="step-dot">${check}</div>
-			<div class="step-name">${name}</div>
-		</div>`;
-	}).join('');
-}
-
 function render() {
 	const app = document.getElementById('app');
 	const danger = document.getElementById('dangerZone');
-
-	renderTrack();
 
 	if (state.done) {
 		app.innerHTML = `
@@ -152,7 +136,6 @@ function render() {
 			<div class="current-step-header">
 				<div class="step-number-big">${STEP_ICONS[step]}</div>
 				<div class="step-text">
-					<div class="label">Step ${step + 1} of 3</div>
 					<div class="title">${isLastStep ? 'Breakfast done?' : STEP_LABELS[step]}</div>
 				</div>
 			</div>
