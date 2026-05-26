@@ -82,41 +82,13 @@ h1 {
 }
 
 .current-step-header {
-	display: flex;
-	align-items: center;
-	gap: 0.7rem;
+	text-align: center;
 	margin-bottom: 1.3rem;
 }
 
 .step-number-big {
-	font-family: var(--sans);
-	font-weight: 700;
 	font-size: 3rem;
 	line-height: 1;
-	color: var(--gvb-fg2);
-	min-width: 2rem;
-}
-
-.step-text {
-	display: flex;
-	flex-direction: column;
-}
-
-.step-text .label {
-	font-size: 0.6rem;
-	letter-spacing: 0.15em;
-	text-transform: uppercase;
-	color: var(--gvb-fg4);
-	margin-bottom: 0.15rem;
-}
-
-.step-text .title {
-	font-family: var(--sans);
-	font-weight: 700;
-	font-size: 1.5rem;
-	letter-spacing: 0.04em;
-	color: var(--gvb-fg0);
-	line-height: 1.1;
 }
 
 .logged-times {
@@ -128,40 +100,28 @@ h1 {
 	overflow: hidden;
 }
 
-.time-row {
+.time-row, .dur-row {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	padding: 0.45rem 0.7rem;
 	font-size: 0.78rem;
-	background: var(--gvb-bg0_s);
 	border-bottom: 1px solid var(--gvb-bg2);
 }
 
-.time-row:last-child { border-bottom: none; }
+.time-row { background: var(--gvb-bg0_s); }
+.time-row:last-child, .dur-row:last-child { border-bottom: none; }
 .time-row .label { color: var(--gvb-fg4); flex-shrink: 1; min-width: 0; margin-right: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .time-row .val { color: var(--gvb-fg4); font-weight: 400; flex-shrink: 0; white-space: nowrap; font-size: 0.72rem; }
 
 .dur-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 0.45rem 0.7rem;
-	font-size: 0.78rem;
-	font-family: var(--mono);
 	color: var(--gvb-fg4);
-	border-bottom: 1px solid var(--gvb-bg2);
-	letter-spacing: 0.04em;
 	font-weight: 500;
 }
 .dur-row span:last-child { color: var(--gvb-fg1); }
-.dur-row:last-child { border-bottom: none; }
 .logged-times > div:nth-child(even) { background: var(--gvb-bg1); }
 
 .restored-badge {
-	font-size: 0.6rem;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
 	color: var(--gvb-aqua2);
 	margin-bottom: 1rem;
 	padding: 0.25rem 0.5rem;
@@ -170,21 +130,24 @@ h1 {
 	display: inline-block;
 }
 
+.big-btn, .dest-btn {
+	font-family: var(--sans);
+	font-weight: 700;
+	text-transform: uppercase;
+	border-radius: 2px;
+	background: var(--gvb-bg2);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
 .big-btn {
 	width: 100%;
 	padding: 1rem;
-	font-family: var(--sans);
-	font-weight: 700;
 	font-size: 1.15rem;
 	letter-spacing: 0.1em;
-	text-transform: uppercase;
 	border: 1px solid var(--gvb-fg2);
-	border-radius: 2px;
-	background: var(--gvb-bg2);
 	color: var(--gvb-fg1);
-	cursor: pointer;
 	transition: filter 0.08s, transform 0.08s;
-	-webkit-tap-highlight-color: transparent;
 }
 
 .big-btn:active {
@@ -207,18 +170,11 @@ h1 {
 
 .dest-btn {
 	padding: 0.9rem 0.5rem;
-	font-family: var(--sans);
-	font-weight: 700;
 	font-size: 1rem;
 	letter-spacing: 0.08em;
-	text-transform: uppercase;
 	border: 1px solid var(--gvb-bg3);
-	border-radius: 2px;
-	background: var(--gvb-bg2);
 	color: var(--gvb-fg3);
-	cursor: pointer;
 	transition: background 0.1s, border-color 0.1s, color 0.1s;
-	-webkit-tap-highlight-color: transparent;
 }
 
 .dest-btn.selected, .dest-btn:active {
@@ -227,24 +183,23 @@ h1 {
 	color: var(--gvb-bg0);
 }
 
-.dest-label {
+.dest-label,
+.notes-row label,
+.step-text .label,
+.restored-badge,
+.clock-label {
 	font-size: 0.6rem;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--gvb-fg4);
-	margin-bottom: 0.5rem;
 }
+
+.restored-badge { color: var(--gvb-aqua2); }
+
+.dest-label { margin-bottom: 0.5rem; }
 
 .notes-row { margin-bottom: 1.1rem; }
-
-.notes-row label {
-	display: block;
-	font-size: 0.6rem;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--gvb-fg4);
-	margin-bottom: 0.35rem;
-}
+.notes-row label { display: block; margin-bottom: 0.35rem; }
 
 .notes-row input {
 	width: 100%;
@@ -330,13 +285,7 @@ h1 {
 	border-bottom: 1px solid var(--gvb-bg2);
 }
 
-.clock-label {
-	font-size: 0.58rem;
-	letter-spacing: 0.15em;
-	text-transform: uppercase;
-	color: var(--gvb-fg4);
-	margin-bottom: 0.2rem;
-}
+.clock-label { margin-bottom: 0.2rem; }
 
 .clock-display {
 	font-family: var(--sans);
@@ -348,3 +297,4 @@ h1 {
 }
 
 .clock-display.warn { color: var(--gvb-red2); }
+
