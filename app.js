@@ -1,7 +1,8 @@
-const STEP_LABELS = ['Woke up', 'Out of bed', 'Ended breakfast'];
-const STEP_ICONS  = ['⏰', '🛏', '🍳'];
-const STEP_NAMES  = ['Start', 'In bed', 'Breakfast'];
+const STEP_LABELS  = ['Woke up', 'Out of bed', 'Ended breakfast'];
+const STEP_ICONS   = ['⏰', '🛏', '🍳'];
+const STEP_NAMES   = ['Start', 'In bed', 'Breakfast'];
 const DESTINATIONS = ['Desk', 'Front door'];
+const DUR_LABELS   = ['in bed', 'breakfasting'];
 
 let state = {
 	times: [],
@@ -12,12 +13,7 @@ let state = {
 };
 
 function fmt(iso) {
-	return new Date(iso).toTimeString().slice(0,8);
-}
-
-function delta(a, b) {
-	const m = Math.round((new Date(b) - new Date(a)) / 60000);
-	return m === 0 ? '<1m' : m + 'm';
+	return new Date(iso).toTimeString().slice(0, 8);
 }
 
 function fmtDur(ms) {
@@ -25,7 +21,16 @@ function fmtDur(ms) {
 	const h = Math.floor(totalSecs / 3600);
 	const m = Math.floor((totalSecs % 3600) / 60);
 	const s = totalSecs % 60;
-	return String(h) + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+	return String(h) + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function localISO() {
+	const d = new Date();
+	const off = -d.getTimezoneOffset();
+	const sign = off >= 0 ? '+' : '-';
+	const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
+	return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, -1)
+		+ sign + pad(off / 60) + ':' + pad(off % 60);
 }
 
 function renderTrack() {
@@ -49,16 +54,15 @@ function render() {
 	renderTrack();
 
 	if (state.done) {
-		const DUR_LABELS_S = ['in bed', 'breakfasting'];
 		app.innerHTML = `
 			<div class="card success-card">
 				<div class="success-icon">📊</div>
 				<h2>Logged</h2>
 				<div class="logged-times">
 					<div class="time-row"><span class="label">${STEP_LABELS[0]}</span><span class="val">${fmt(state.times[0])}</span></div>
-					<div class="dur-row"><span>${DUR_LABELS_S[0]}</span><span>${fmtDur(new Date(state.times[1]) - new Date(state.times[0]))}</span></div>
+					<div class="dur-row"><span>${DUR_LABELS[0]}</span><span>${fmtDur(new Date(state.times[1]) - new Date(state.times[0]))}</span></div>
 					<div class="time-row"><span class="label">${STEP_LABELS[1]}</span><span class="val">${fmt(state.times[1])}</span></div>
-					<div class="dur-row"><span>${DUR_LABELS_S[1]}</span><span>${fmtDur(new Date(state.times[2]) - new Date(state.times[1]))}</span></div>
+					<div class="dur-row"><span>${DUR_LABELS[1]}</span><span>${fmtDur(new Date(state.times[2]) - new Date(state.times[1]))}</span></div>
 					<div class="time-row"><span class="label">${STEP_LABELS[2]}</span><span class="val">${fmt(state.times[2])}</span></div>
 					<div class="dur-row"><span>Σ</span><span>${fmtDur(new Date(state.times[2]) - new Date(state.times[0]))}</span></div>
 					<div class="time-row"><span class="label">→</span><span class="val">${state.destination}</span></div>
@@ -72,7 +76,6 @@ function render() {
 	const step = state.times.length;
 	const isLastStep = step === 2;
 
-	const DUR_LABELS = ['in bed', 'breakfasting'];
 	let timesRows = '';
 	for (let i = 0; i < 3; i++) {
 		const t = state.times[i];
@@ -83,7 +86,7 @@ function render() {
 		if (i < 2) {
 			let durContent;
 			if (state.times[i] && state.times[i + 1]) {
-				durContent = fmtDur(new Date(state.times[i+1]) - new Date(state.times[i]));
+				durContent = fmtDur(new Date(state.times[i + 1]) - new Date(state.times[i]));
 			} else if (state.times[i] && !state.times[i + 1] && i === step - 1) {
 				durContent = `<span id="cardLiveDur">0:00:00</span>`;
 			} else {
@@ -166,9 +169,9 @@ function render() {
 let clockInterval = null;
 
 function startClock() {
-	if (clockInterval) clearInterval(clockInterval);
+	if (clockInterval) { clearInterval(clockInterval); }
 	const step = state.times.length;
-	if (step < 1 || state.done) return;
+	if (step < 1 || state.done) { return; }
 	const since = new Date(state.times[step - 1]);
 	function tick() {
 		const el = document.getElementById('clockDisplay');
@@ -177,29 +180,15 @@ function startClock() {
 		const secs = Math.floor(ms / 1000);
 		const m = Math.floor(secs / 60);
 		const s = secs % 60;
-		el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+		el.textContent = `${m}:${String(s).padStart(2, '0')}`;
 		el.className = 'clock-display' + (m >= 30 ? ' warn' : '');
-		const durEl = document.getElementById('stepLiveDur');
-		if (durEl) durEl.textContent = fmtDur(ms);
 		const cardDurEl = document.getElementById('cardLiveDur');
-		if (cardDurEl) cardDurEl.textContent = fmtDur(ms);
+		if (cardDurEl) { cardDurEl.textContent = fmtDur(ms); }
 		const totalDurEl = document.getElementById('totalLiveDur');
-		if (totalDurEl) {
-			const totalMs = Date.now() - new Date(state.times[0]);
-			totalDurEl.textContent = fmtDur(totalMs);
-		}
+		if (totalDurEl) { totalDurEl.textContent = fmtDur(Date.now() - new Date(state.times[0])); }
 	}
 	tick();
 	clockInterval = setInterval(tick, 1000);
-}
-
-function localISO() {
-	const d = new Date();
-	const off = -d.getTimezoneOffset();
-	const sign = off >= 0 ? '+' : '-';
-	const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0');
-	return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, -1)
-		+ sign + pad(off / 60) + ':' + pad(off % 60);
 }
 
 async function logStep() {
@@ -244,11 +233,11 @@ async function persistSession() {
 
 async function saveRow() {
 	const payload = {
-		woke_up: state.times[0],
-		out_of_bed: state.times[1],
+		woke_up:            state.times[0],
+		out_of_bed:         state.times[1],
 		finished_breakfast: state.times[2],
-		destination: state.destination,
-		notes: state.notes,
+		destination:        state.destination,
+		notes:              state.notes,
 	};
 	try {
 		const r = await fetch('/log', {
@@ -288,6 +277,6 @@ async function loadSession() {
 }
 
 document.getElementById('dateLine').textContent =
-	new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+	new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 loadSession();

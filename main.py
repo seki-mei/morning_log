@@ -2,42 +2,38 @@
 """
 Morning routine logger.
 Serves a UI at http://localhost:8787
-Session persisted to ~/morning_session.json (auto-cleared after save)
+Session persisted to ~/morning_log/session.json (auto-cleared after save)
 """
 
 import csv
 import json
-import mimetypes
-import os
 from datetime import datetime, date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-CSV_PATH     = os.path.expanduser("~/morning_log/morning_log.csv")
-SESSION_PATH = os.path.expanduser("~/morning_log/session.json")
-STATIC_DIR   = Path(__file__).parent          # index.html / style.css / app.js live here
+CSV_PATH     = Path.home() / "morning_log/morning_log.csv"
+SESSION_PATH = Path.home() / "morning_log/session.json"
+STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
 
-# Static files the browser is allowed to fetch
 STATIC_FILES = {
-        "/":          ("index.html", "text/html; charset=utf-8"),
-        "/style.css": ("style.css",  "text/css; charset=utf-8"),
-        "/app.js":    ("app.js",     "application/javascript; charset=utf-8"),
-        }
+    "/":          ("index.html", "text/html; charset=utf-8"),
+    "/style.css": ("style.css",  "text/css; charset=utf-8"),
+    "/app.js":    ("app.js",     "application/javascript; charset=utf-8"),
+}
 
 
 def ensure_csv():
-    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-    if not os.path.exists(CSV_PATH):
-        with open(CSV_PATH, "w", newline="") as f:
+    CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not CSV_PATH.exists():
+        with CSV_PATH.open("w", newline="") as f:
             csv.writer(f).writerow(CSV_HEADERS)
 
 
 def load_session():
     try:
-        with open(SESSION_PATH) as f:
-            data = json.load(f)
+        data = json.loads(SESSION_PATH.read_text())
         if data.get("date") != str(date.today()):
             return {}
         return data
@@ -46,35 +42,28 @@ def load_session():
 
 
 def save_session(data: dict):
-    data["date"] = str(date.today())
-    with open(SESSION_PATH, "w") as f:
-        json.dump(data, f)
+    SESSION_PATH.write_text(json.dumps({**data, "date": str(date.today())}))
 
 
 def delete_session():
-    try:
-        os.remove(SESSION_PATH)
-    except FileNotFoundError:
-        pass
+    SESSION_PATH.unlink(missing_ok=True)
+
+
+def hhmm(iso: str) -> str:
+    return datetime.fromisoformat(iso).strftime("%H:%M")
 
 
 def append_row(data: dict):
-    def parse_local(iso):
-        return datetime.fromisoformat(iso)
-
-    def hhmm(iso):
-        return parse_local(iso).strftime("%H:%M")
-
-    woke_local = parse_local(data["woke_up"])
+    woke = datetime.fromisoformat(data["woke_up"])
     row = [
-            woke_local.strftime("%Y-%m-%d"),
-            woke_local.strftime("%H:%M"),
-            hhmm(data["out_of_bed"]),
-            hhmm(data["finished_breakfast"]),
-            data.get("destination", ""),
-            data.get("notes", ""),
-            ]
-    with open(CSV_PATH, "a", newline="") as f:
+        woke.strftime("%Y-%m-%d"),
+        woke.strftime("%H:%M"),
+        hhmm(data["out_of_bed"]),
+        hhmm(data["finished_breakfast"]),
+        data.get("destination", ""),
+        data.get("notes", ""),
+    ]
+    with CSV_PATH.open("a", newline="") as f:
         csv.writer(f).writerow(row)
 
 
@@ -84,16 +73,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/session":
-            body = json.dumps(load_session()).encode()
-            self._respond(200, "application/json", body)
+            self._respond(200, "application/json", json.dumps(load_session()).encode())
             return
 
         if self.path in STATIC_FILES:
             filename, content_type = STATIC_FILES[self.path]
-            filepath = STATIC_DIR / filename
             try:
-                body = filepath.read_bytes()
-                self._respond(200, content_type, body)
+                self._respond(200, content_type, (STATIC_DIR / filename).read_bytes())
             except FileNotFoundError:
                 self._json(404, {"ok": False, "error": f"{filename} not found"})
             return
@@ -102,9 +88,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length)
         try:
-            data = json.loads(body)
+            data = json.loads(self.rfile.read(length))
         except Exception as e:
             self._json(500, {"ok": False, "error": str(e)})
             return
