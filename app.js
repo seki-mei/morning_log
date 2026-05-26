@@ -1,7 +1,7 @@
 const STEP_LABELS  = ['Woke up', 'Out of bed', 'Ended breakfast'];
-const STEP_ICONS   = ['⏰', '🛏', '🍳'];
+const STEP_ICONS   = ['⏰', '🛏', '🥞', '📊'];
 const DESTINATIONS = ['Desk', 'Front door'];
-const DUR_LABELS   = ['in bed', 'breakfasting'];
+const DUR_LABELS   = ['bed', 'breakfast'];
 
 let state = {
 	times: [],
@@ -36,29 +36,10 @@ function render() {
 	const app = document.getElementById('app');
 	const danger = document.getElementById('dangerZone');
 
-	if (state.done) {
-		app.innerHTML = `
-								<div class="card success-card">
-												<div class="success-icon">📊</div>
-																<h2>Logged</h2>
-																				<div class="logged-times">
-																									<div class="time-row"><span class="label">${STEP_LABELS[0]}</span><span class="val">${fmt(state.times[0])}</span></div>
-																														<div class="dur-row"><span>${DUR_LABELS[0]}</span><span>${fmtDur(new Date(state.times[1]) - new Date(state.times[0]))}</span></div>
-																																			<div class="time-row"><span class="label">${STEP_LABELS[1]}</span><span class="val">${fmt(state.times[1])}</span></div>
-																																								<div class="dur-row"><span>${DUR_LABELS[1]}</span><span>${fmtDur(new Date(state.times[2]) - new Date(state.times[1]))}</span></div>
-																																													<div class="time-row"><span class="label">${STEP_LABELS[2]}</span><span class="val">${fmt(state.times[2])}</span></div>
-																																																		<div class="dur-row"><span>Σ</span><span>${fmtDur(new Date(state.times[2]) - new Date(state.times[0]))}</span></div>
-																																																							<div class="time-row"><span class="label">→</span><span class="val">${state.destination}</span></div>
-																																																												${state.notes ? `<div class="time-row"><span class="label">notes</span><span class="val">${state.notes}</span></div>` : ''}
-																																																																</div>
-																																																																			</div>`;
-		danger.innerHTML = `<button class="ghost-btn red" onclick="resetAll()">Start from scratch</button>`;
-		return;
-	}
-
 	const step = state.times.length;
 	const isLastStep = step === 2;
 
+	// build times table (shared by in-progress and done views)
 	let timesRows = '';
 	for (let i = 0; i < 3; i++) {
 		const t = state.times[i];
@@ -87,6 +68,10 @@ function render() {
 		totalContent = '--:--:--';
 	}
 	timesRows += `<div class="dur-row"><span>Σ</span><span>${totalContent}</span></div>`;
+	if (state.done) {
+		timesRows += `<div class="time-row"><span class="label">→</span><span class="val">${state.destination}</span></div>`;
+		if (state.notes) timesRows += `<div class="time-row"><span class="label">notes</span><span class="val">${state.notes}</span></div>`;
+	}
 	const timesHtml = `<div class="logged-times">${timesRows}</div>`;
 
 	const restoredBadge = state.restored
@@ -96,37 +81,45 @@ function render() {
 	const btnDisabled = isLastStep && !state.destination ? 'disabled' : '';
 	const clockLabel = step === 1 ? 'time since waking' : 'time since out of bed';
 
+	const activeHtml = state.done ? '' : `
+				<div class="clock-wrap">
+							<div class="clock-label">${clockLabel}</div>
+										<div class="clock-display" id="clockDisplay">0:00</div>
+												</div>
+														<div class="dest-label">Where to next?</div>
+																<div class="dest-btns">
+																			${DESTINATIONS.map(d => `
+																							<button class="dest-btn ${state.destination === d ? 'selected' : ''}"
+																												onclick="pickDest('${d}')">${d}</button>
+																															`).join('')}
+																																	</div>
+																																			<div class="notes-row">
+																																						<label>Notes (optional)</label>
+																																									<input type="text" placeholder="anything unusual..." value="${state.notes}"
+																																													oninput="state.notes=this.value">
+																																															</div>
+																																																	<button class="big-btn" onclick="logStep()" ${btnDisabled}>${btnLabel}</button>
+																																																		`;
+
 	app.innerHTML = `
 				<div class="card">
-							${restoredBadge}
-										${timesHtml}
-													<div class="clock-wrap">
-																	<div class="clock-label">${clockLabel}</div>
-																					<div class="clock-display" id="clockDisplay">0:00</div>
-																								</div>
-																											<div class="dest-label">Where to next?</div>
-																														<div class="dest-btns">
-																																		${DESTINATIONS.map(d => `
-																																							<button class="dest-btn ${state.destination === d ? 'selected' : ''}"
-																																													onclick="pickDest('${d}')">${d}</button>
-																																																	`).join('')}
-																																																				</div>
-																																																							<div class="notes-row">
-																																																											<label>Notes (optional)</label>
-																																																															<input type="text" placeholder="anything unusual..." value="${state.notes}"
-																																																																				oninput="state.notes=this.value">
-																																																																							</div>
-																																																																										<div class="current-step-header">
-																																																																														<div class="step-number-big">${STEP_ICONS[step]}</div>
-																																																																																	</div>
-																																																																																				<button class="big-btn" onclick="logStep()" ${btnDisabled}>${btnLabel}</button>
-																																																																																						</div>`;
+							<div class="current-step-header">
+											<div class="step-number-big">${STEP_ICONS[step]}</div>
+														</div>
+																	${restoredBadge}
+																				${timesHtml}
+																							${activeHtml}
+																									</div>`;
 
 	startClock();
 
-	danger.innerHTML = step > 0
-		? `<button class="ghost-btn red" onclick="resetAll()">↺ Went back to sleep — start over</button>`
-		: '';
+	if (state.done) {
+		danger.innerHTML = `<button class="ghost-btn red" onclick="resetAll()">Start from scratch</button>`;
+	} else {
+		danger.innerHTML = step > 0
+			? `<button class="ghost-btn red" onclick="resetAll()">↺ Went back to sleep — start over</button>`
+			: '';
+	}
 }
 
 let clockInterval = null;

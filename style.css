@@ -240,23 +240,6 @@ h1 {
 .ghost-btn.red { border-color: var(--gvb-red); color: var(--gvb-red2); }
 .ghost-btn:active { opacity: 0.6; }
 
-.success-card {
-	text-align: center;
-	padding: 2rem 1.3rem;
-}
-
-.success-icon { font-size: 2.2rem; margin-bottom: 0.6rem; }
-
-.success-card h2 {
-	font-family: var(--sans);
-	font-weight: 700;
-	font-size: 1.8rem;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: var(--gvb-green2);
-	margin-bottom: 0.8rem;
-}
-
 
 .toast {
 	position: fixed;
