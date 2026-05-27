@@ -137,7 +137,6 @@ function startClock() {
 		const m = Math.floor(secs / 60);
 		const s = secs % 60;
 		el.textContent = `${m}:${String(s).padStart(2, '0')}`;
-		el.className = 'clock-display' + (m >= 30 ? ' warn' : '');
 		const cardDurEl = document.getElementById('cardLiveDur');
 		if (cardDurEl) { cardDurEl.textContent = fmtDur(ms); }
 		const totalDurEl = document.getElementById('totalLiveDur');

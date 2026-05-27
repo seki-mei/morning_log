@@ -278,6 +278,3 @@ h1 {
 	color: var(--gvb-fg1);
 	letter-spacing: 0.06em;
 }
-
-.clock-display.warn { color: var(--gvb-red2); }
-
