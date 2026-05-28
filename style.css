@@ -121,15 +121,6 @@ h1 {
 .dur-row span:last-child { color: var(--gvb-fg1); }
 .logged-times > div:nth-child(even) { background: var(--gvb-bg1); }
 
-.restored-badge {
-	color: var(--gvb-aqua2);
-	margin-bottom: 1rem;
-	padding: 0.25rem 0.5rem;
-	border: 1px solid var(--gvb-aqua);
-	border-radius: 2px;
-	display: inline-block;
-}
-
 .big-btn, .dest-btn {
 	font-family: var(--sans);
 	font-weight: 700;
@@ -193,8 +184,6 @@ h1 {
 	text-transform: uppercase;
 	color: var(--gvb-fg4);
 }
-
-.restored-badge { color: var(--gvb-aqua2); }
 
 .dest-label { margin-bottom: 0.5rem; }
 

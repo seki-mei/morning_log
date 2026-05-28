@@ -8,7 +8,6 @@ let state = {
 	destination: null,
 	notes: '',
 	done: false,
-	restored: false,
 };
 
 function fmt(iso) {
@@ -74,9 +73,6 @@ function render() {
 	}
 	const timesHtml = `<div class="logged-times">${timesRows}</div>`;
 
-	const restoredBadge = state.restored
-		? `<div class="restored-badge">↺ session restored</div>` : '';
-
 	const btnLabel = step === 0 ? 'JUST WOKE UP' : step === 1 ? 'NOW OUT OF BED' : 'ENDED BREAKFAST';
 	const btnDisabled = isLastStep && !state.destination ? 'disabled' : '';
 	const clockLabel = step === 1 ? 'time since waking' : 'time since out of bed';
@@ -106,10 +102,9 @@ function render() {
 							<div class="current-step-header">
 											<div class="step-number-big">${STEP_ICONS[step]}</div>
 														</div>
-																	${restoredBadge}
-																				${timesHtml}
-																							${activeHtml}
-																									</div>`;
+																			${timesHtml}
+																						${activeHtml}
+																								</div>`;
 
 	startClock();
 
@@ -150,7 +145,6 @@ async function logStep() {
 	const now = localISO();
 	if (state.times.length < 2) {
 		state.times.push(now);
-		state.restored = false;
 		await persistSession();
 		render();
 	} else {
@@ -166,7 +160,7 @@ function pickDest(d) {
 
 async function resetAll() {
 	if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
-	state = { times: [], destination: null, notes: '', done: false, restored: false };
+	state = { times: [], destination: null, notes: '', done: false };
 	await fetch('/session', { method: 'DELETE' });
 	render();
 }
@@ -225,7 +219,6 @@ async function loadSession() {
 			state.times = j.times;
 			state.destination = j.destination || null;
 			state.notes = j.notes || '';
-			state.restored = true;
 		}
 	} catch(e) { /* fresh start */ }
 	render();
