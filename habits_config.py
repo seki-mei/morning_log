@@ -1,0 +1,42 @@
+HABITS = [
+    {
+        "id":        "meditation",
+        "label":     "Meditate",
+        "group":     "Mind",
+        "freq":      "daily",
+        "criterion": "10+ minutes, eyes closed, no phone",
+        "retired":   False,
+    },
+    {
+        "id":        "reading",
+        "label":     "Read",
+        "group":     "Mind",
+        "freq":      "daily",
+        "criterion": "30+ minutes of a book (not articles)",
+        "retired":   False,
+    },
+    {
+        "id":        "exercise",
+        "label":     "Exercise",
+        "group":     "Body",
+        "freq":      "daily",
+        "criterion": "30+ minutes of intentional movement",
+        "retired":   False,
+    },
+    {
+        "id":        "stretching",
+        "label":     "Stretch",
+        "group":     "Body",
+        "freq":      "daily",
+        "criterion": "10+ minutes of stretching or mobility work",
+        "retired":   False,
+    },
+    {
+        "id":        "long_walk",
+        "label":     "Long walk",
+        "group":     "Body",
+        "freq":      "weekly",
+        "criterion": "60+ minute walk outdoors",
+        "retired":   False,
+    },
+]

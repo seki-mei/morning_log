@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
 """
-Morning routine logger.
-Serves a UI at http://localhost:8787
-Session persisted to ~/morning_log/session.json (auto-cleared after save)
+Morning routine logger + habit tracker.
+Serves UI at http://localhost:8787
 """
 
 import csv
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from habits_config import HABITS
 
 CSV_PATH     = Path.home() / "morning_log/morning_log.csv"
+HABITS_CSV   = Path.home() / "morning_log/habits.csv"
 SESSION_PATH = Path.home() / "morning_log/session.json"
 STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
 
 STATIC_FILES = {
-    "/":          ("index.html", "text/html; charset=utf-8"),
-    "/style.css": ("style.css",  "text/css; charset=utf-8"),
-    "/app.js":    ("app.js",     "application/javascript; charset=utf-8"),
+    "/":          ("habits.html",  "text/html; charset=utf-8"),
+    "/morning":   ("morning.html", "text/html; charset=utf-8"),
+    "/style.css": ("style.css",    "text/css; charset=utf-8"),
+    "/app.js":    ("app.js",       "application/javascript; charset=utf-8"),
+    "/habits.js": ("habits.js",    "application/javascript; charset=utf-8"),
 }
+
+
+def logical_today():
+    return (datetime.now() - timedelta(hours=4)).date()
 
 
 def ensure_csv():
@@ -29,6 +36,78 @@ def ensure_csv():
     if not CSV_PATH.exists():
         with CSV_PATH.open("w", newline="") as f:
             csv.writer(f).writerow(CSV_HEADERS)
+
+
+def ensure_habits_csv():
+    HABITS_CSV.parent.mkdir(parents=True, exist_ok=True)
+    all_ids = ["date"] + [h["id"] for h in HABITS]
+
+    if not HABITS_CSV.exists():
+        with HABITS_CSV.open("w", newline="") as f:
+            csv.writer(f).writerow(all_ids)
+        return
+
+    with HABITS_CSV.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        existing_fields = list(reader.fieldnames or [])
+        rows = list(reader)
+
+    new_ids = [h_id for h_id in all_ids if h_id not in existing_fields]
+    if not new_ids:
+        return
+
+    updated_fields = existing_fields + new_ids
+    for row in rows:
+        for h_id in new_ids:
+            row[h_id] = ""
+
+    with HABITS_CSV.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=updated_fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def load_habits_rows(days=84):
+    cutoff = str(logical_today() - timedelta(days=days - 1))
+    rows = {}
+    if not HABITS_CSV.exists():
+        return rows
+    with HABITS_CSV.open("r", newline="") as f:
+        for row in csv.DictReader(f):
+            d = row.get("date", "")
+            if d >= cutoff:
+                rows[d] = {k: (1 if v == "1" else 0) for k, v in row.items() if k != "date"}
+    return rows
+
+
+def habits_data():
+    active = [
+        {k: h[k] for k in ("id", "label", "group", "freq", "criterion")}
+        for h in HABITS if not h.get("retired", False)
+    ]
+    return {"today": str(logical_today()), "habits": active, "rows": load_habits_rows(84)}
+
+
+def log_habit(date_str: str, habit_id: str, value: int):
+    ensure_habits_csv()
+    rows = {}
+
+    with HABITS_CSV.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        fieldnames = list(reader.fieldnames)
+        for row in reader:
+            rows[row["date"]] = dict(row)
+
+    if date_str not in rows:
+        rows[date_str] = {"date": date_str, **{f: "" for f in fieldnames if f != "date"}}
+
+    rows[date_str][habit_id] = "1" if value == 1 else ""
+
+    with HABITS_CSV.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for d in sorted(rows):
+            writer.writerow(rows[d])
 
 
 def load_session():
@@ -76,6 +155,10 @@ class Handler(BaseHTTPRequestHandler):
             self._respond(200, "application/json", json.dumps(load_session()).encode())
             return
 
+        if self.path == "/habits_data":
+            self._respond(200, "application/json", json.dumps(habits_data()).encode())
+            return
+
         if self.path in STATIC_FILES:
             filename, content_type = STATIC_FILES[self.path]
             try:
@@ -104,6 +187,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, {"ok": True})
             except Exception as e:
                 self._json(500, {"ok": False, "error": str(e)})
+        elif self.path == "/habits_log":
+            try:
+                log_habit(data["date"], data["habit_id"], int(data["value"]))
+                self._json(200, {"ok": True})
+            except Exception as e:
+                self._json(500, {"ok": False, "error": str(e)})
         else:
             self._json(404, {"ok": False, "error": "not found"})
 
@@ -127,8 +216,10 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     ensure_csv()
-    print(f"Morning log running → http://0.0.0.0:{PORT}")
+    ensure_habits_csv()
+    print(f"Habit tracker + morning log → http://0.0.0.0:{PORT}")
     print(f"CSV:     {CSV_PATH}")
+    print(f"Habits:  {HABITS_CSV}")
     print(f"Session: {SESSION_PATH}")
     print(f"Static:  {STATIC_DIR}")
     print("Ctrl-C to stop.")
