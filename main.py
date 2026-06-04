@@ -87,7 +87,7 @@ def ensure_habits_csv():
         writer.writerows(rows)
 
 
-def load_habits_rows(days=84):
+def load_habits_rows(days=190):
     cutoff = str(logical_today() - timedelta(days=days - 1))
     rows = {}
     if not HABITS_CSV.exists():

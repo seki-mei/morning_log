@@ -93,7 +93,6 @@ function buildHeatmapContent(habit, today) {
 function renderHabitRow(habit, today) {
     const { id, label, freq, criterion } = habit;
     const isOpen = expandedHabits.has(id);
-    const openCls = isOpen ? ' open' : '';
 
     const dotsHtml = computeDots(id, freq, today).map((dot, i) => {
         const cls = ['habit-dot', i === 0 && 'today', dot.done && 'done'].filter(Boolean).join(' ');
@@ -108,13 +107,12 @@ function renderHabitRow(habit, today) {
     return `<div class="habit-row">
   <div class="habit-label-row">
     <button class="habit-label-toggle" data-accordion="${id}">
-      <span class="habit-caret${openCls}">▶</span>
       <span class="habit-name">${label}</span>
     </button>
     <div class="habit-dots${freq === 'weekly' ? ' weekly' : ''}">${dotsHtml}</div>
   </div>
   <div class="habit-bar">${barHtml}</div>
-  <div class="habit-accordion${openCls}">
+  <div class="habit-accordion${isOpen ? ' open' : ''}">
     <div class="habit-criterion">${criterion}</div>
     ${isOpen ? buildHeatmapContent(habit, today) : ''}
   </div>
@@ -177,7 +175,6 @@ function toggleAccordion(habitId) {
         const openToggle = document.querySelector(`[data-accordion="${openId}"]`);
         if (!openToggle) continue;
         const openRow = openToggle.closest('.habit-row');
-        openRow.querySelector('.habit-caret').classList.remove('open');
         openRow.querySelector('.habit-accordion').classList.remove('open');
         expandedHabits.delete(openId);
     }
@@ -187,11 +184,9 @@ function toggleAccordion(habitId) {
     const accordion = habitRow.querySelector('.habit-accordion');
     if (expandedHabits.has(habitId)) {
         expandedHabits.delete(habitId);
-        habitRow.querySelector('.habit-caret').classList.remove('open');
         accordion.classList.remove('open');
     } else {
         expandedHabits.add(habitId);
-        habitRow.querySelector('.habit-caret').classList.add('open');
         accordion.classList.add('open');
         if (!accordion.querySelector('.habit-inline-heatmap')) {
             const habit = state.habits.find(h => h.id === habitId);
@@ -201,6 +196,7 @@ function toggleAccordion(habitId) {
 }
 
 async function loadHabits() {
+    document.getElementById('app').textContent = 'loading…';
     const res = await fetch('/habits_data');
     state = await res.json();
     render();

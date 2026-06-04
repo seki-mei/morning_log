@@ -70,6 +70,11 @@ h1 {
 	text-transform: uppercase;
 }
 
+#app {
+	width: 100%;
+	max-width: 440px;
+}
+
 /* ── Main card ── */
 .card {
 	width: 100%;
@@ -288,6 +293,7 @@ footer {
 
 
 .group-header {
+	font-family: var(--mono);
 	font-variant: small-caps;
 	font-size: 0.78rem;
 	font-weight: 600;
@@ -326,17 +332,10 @@ footer {
 	-webkit-tap-highlight-color: transparent;
 }
 
-.habit-caret {
-	font-size: 0.6rem;
-	color: var(--gvb-fg4);
-	flex-shrink: 0;
-	display: inline-block;
-	transition: transform 0.2s ease;
-}
-.habit-caret.open { transform: rotate(90deg); }
 
 .habit-name {
 	flex: 1;
+	font-family: var(--sans);
 	font-size: 0.92rem;
 	color: var(--gvb-fg1);
 	min-width: 0;
@@ -362,8 +361,8 @@ footer {
 	display: inline-block;
 }
 .habit-dot.today {
-	width: 18px;
-	height: 18px;
+	width: 26px;
+	height: 26px;
 	background: var(--gvb-bg3);
 	cursor: pointer;
 	border: none;
@@ -392,6 +391,7 @@ footer {
 
 .habit-criterion {
 	padding: 0.5rem 0 0.3rem 1.1rem;
+	font-family: var(--sans);
 	font-size: 0.78rem;
 	color: var(--gvb-fg4);
 	line-height: 1.5;
