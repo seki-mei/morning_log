@@ -77,15 +77,6 @@ function computeHistory(habitId, freq, todayStr, count) {
     });
 }
 
-/** @param {string} habitId @param {'daily'|'weekly'} freq @param {string} today @returns {DotEntry[]} */
-function computeDots(habitId, freq, today) {
-    return computeHistory(habitId, freq, today, 7);
-}
-
-/** @param {string} habitId @param {'daily'|'weekly'} freq @param {string} today @returns {DotEntry[]} */
-function computeBar(habitId, freq, today) {
-    return computeHistory(habitId, freq, today, freq === 'daily' ? 30 : 12);
-}
 
 /**
  * @param {Habit} habit
@@ -133,14 +124,14 @@ function renderHabitRow(habit, today) {
     const { id, label, freq, criterion } = habit;
     const isOpen = expandedHabits.has(id);
 
-    const dotsHtml = computeDots(id, freq, today).map((dot, i) => {
+    const dotsHtml = computeHistory(id, freq, today, 7).map((dot, i) => {
         const cls = ['habit-dot', i === 0 && 'today', i === 1 && 'yesterday', dot.done && 'done'].filter(Boolean).join(' ');
         // Only today (0) and yesterday (1) are interactive.
         if (i <= 1) return `<button class="${cls}" data-dot-habit="${id}" data-dot-date="${dot.date}"></button>`;
         return `<span class="${cls}"></span>`;
     }).join('');
 
-    const barHtml = computeBar(id, freq, today)
+    const barHtml = computeHistory(id, freq, today, freq === 'daily' ? 30 : 12)
         .map(s => `<span class="habit-bar-seg${s.done ? ' done' : ''}"></span>`)
         .join('');
 
