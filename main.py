@@ -42,7 +42,7 @@ STATIC_FILES = {
 
 
 def logical_today():
-    return (datetime.now() - timedelta(hours=4)).date()
+    return date.today()
 
 
 def ensure_habits_json():

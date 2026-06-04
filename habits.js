@@ -3,9 +3,8 @@
 let state = null;
 const expandedHabits = new Set();
 
-function computeLogicalToday() {
-    const d = new Date(Date.now() - 4 * 3600 * 1000);
-    return fmtDate(d);
+function getToday() {
+    return fmtDate(new Date());
 }
 
 function fmtDate(d) {
@@ -37,13 +36,14 @@ function isWeekDone(habitId, mondayStr) {
     return false;
 }
 
-function computeHistory(habitId, freq, today, count) {
+function computeHistory(habitId, freq, todayStr, count) {
     return Array.from({ length: count }, (_, i) => {
         if (freq === 'daily') {
-            const d = addDays(today, -i);
-            return { done: !!(state.rows[d] && state.rows[d][habitId]) };
+            const date = addDays(todayStr, -i);
+            return { date, done: !!(state.rows[date] && state.rows[date][habitId]) };
         }
-        return { done: isWeekDone(habitId, weekKey(addDays(today, -i * 7))) };
+        const date = weekKey(addDays(todayStr, -i * 7));
+        return { date, done: isWeekDone(habitId, date) };
     });
 }
 
@@ -93,7 +93,7 @@ function renderHabitRow(habit, today) {
 
     const dotsHtml = computeDots(id, freq, today).map((dot, i) => {
         const cls = ['habit-dot', i === 0 && 'today', dot.done && 'done'].filter(Boolean).join(' ');
-        if (i === 0) return `<button class="${cls}" data-today-dot="${id}"></button>`;
+        if (i <= 1) return `<button class="${cls}" data-dot-habit="${id}" data-dot-date="${dot.date}"></button>`;
         return `<span class="${cls}"></span>`;
     }).join('');
 
@@ -117,7 +117,7 @@ function renderHabitRow(habit, today) {
 }
 
 function render() {
-    const today = computeLogicalToday();
+    const today = getToday();
 
     const dt = new Date(today + 'T12:00:00');
     document.getElementById('dateLine').textContent =
@@ -142,32 +142,31 @@ function render() {
 }
 
 function attachHandlers() {
-    document.querySelectorAll('[data-today-dot]').forEach(dot => {
-        dot.addEventListener('click', e => { e.stopPropagation(); toggleToday(dot.dataset.todayDot); });
+    document.querySelectorAll('[data-dot-habit]').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); toggleDot(btn.dataset.dotHabit, btn.dataset.dotDate); });
     });
     document.querySelectorAll('[data-accordion]').forEach(el => {
         el.addEventListener('click', () => toggleAccordion(el.dataset.accordion));
     });
 }
 
-async function toggleToday(habitId) {
-    const btn = document.querySelector(`[data-today-dot="${habitId}"]`);
+async function toggleDot(habitId, dateStr) {
+    const btn = document.querySelector(`[data-dot-habit="${habitId}"][data-dot-date="${dateStr}"]`);
     if (btn) btn.disabled = true;
-    const today = computeLogicalToday();
-    if (!state.rows[today]) state.rows[today] = {};
-    const newVal = state.rows[today][habitId] ? 0 : 1;
+    if (!state.rows[dateStr]) state.rows[dateStr] = {};
+    const newVal = state.rows[dateStr][habitId] ? 0 : 1;
     try {
         const res = await fetch('/habits_log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date: today, habit_id: habitId, value: newVal }),
+            body: JSON.stringify({ date: dateStr, habit_id: habitId, value: newVal }),
         });
         if ((await res.json()).ok) {
-            state.rows[today][habitId] = newVal;
+            state.rows[dateStr][habitId] = newVal;
             render();
         }
     } finally {
-        const b = document.querySelector(`[data-today-dot="${habitId}"]`);
+        const b = document.querySelector(`[data-dot-habit="${habitId}"][data-dot-date="${dateStr}"]`);
         if (b) b.disabled = false;
     }
 }
@@ -194,7 +193,7 @@ function toggleAccordion(habitId) {
         accordion.classList.add('open');
         if (!accordion.querySelector('.habit-inline-heatmap')) {
             const habit = state.habits.find(h => h.id === habitId);
-            accordion.insertAdjacentHTML('beforeend', buildHeatmapContent(habit, computeLogicalToday()));
+            accordion.insertAdjacentHTML('beforeend', buildHeatmapContent(habit, getToday()));
         }
     }
 }
