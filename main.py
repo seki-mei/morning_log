@@ -11,9 +11,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from habits_config import HABITS
 
-CSV_PATH     = Path.home() / "morning_log/morning_log.csv"
-HABITS_CSV   = Path.home() / "morning_log/habits.csv"
-SESSION_PATH = Path.home() / "morning_log/session.json"
+DATA_DIR     = Path.home() / ".local/share/data/personal_logs"
+CSV_PATH     = DATA_DIR / "morning_log.csv"
+HABITS_CSV   = DATA_DIR / "habits.csv"
+SESSION_PATH = DATA_DIR / "session.json"
 STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
@@ -218,8 +219,7 @@ if __name__ == "__main__":
     ensure_csv()
     ensure_habits_csv()
     print(f"Habit tracker + morning log → http://0.0.0.0:{PORT}")
-    print(f"CSV:     {CSV_PATH}")
-    print(f"Habits:  {HABITS_CSV}")
+    print(f"Data:    {DATA_DIR}")
     print(f"Session: {SESSION_PATH}")
     print(f"Static:  {STATIC_DIR}")
     print("Ctrl-C to stop.")

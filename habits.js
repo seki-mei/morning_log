@@ -58,15 +58,22 @@ function computeBar(habitId, freq, today) {
     });
 }
 
+function getHeatmapWeeks() {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const cardWidth = Math.min(440, window.innerWidth - 2 * rem);
+    const available = cardWidth - (2 * 1.3 + 1.1) * rem;
+    return Math.max(4, Math.floor((available + 2) / 12));
+}
+
 function buildHeatmapContent(habit, today) {
-    const WEEKS = 52;
+    const WEEKS = getHeatmapWeeks();
     const todayDate = new Date(today + 'T12:00:00');
     const mon = new Date(todayDate);
     const dow = mon.getDay();
     mon.setDate(mon.getDate() + (dow === 0 ? -6 : 1 - dow));
 
     const cols = [];
-    for (let w = WEEKS - 1; w >= 0; w--) {
+    for (let w = 0; w < WEEKS; w++) {
         const days = [];
         for (let d = 0; d < 7; d++) {
             const dt = new Date(mon);
@@ -181,14 +188,19 @@ async function toggleToday(habitId) {
 function toggleAccordion(habitId) {
     const toggle = document.querySelector(`[data-accordion="${habitId}"]`);
     const habitRow = toggle.closest('.habit-row');
+    const accordion = habitRow.querySelector('.habit-accordion');
     if (expandedHabits.has(habitId)) {
         expandedHabits.delete(habitId);
         habitRow.querySelector('.habit-caret').classList.remove('open');
-        habitRow.querySelector('.habit-accordion').classList.remove('open');
+        accordion.classList.remove('open');
     } else {
         expandedHabits.add(habitId);
         habitRow.querySelector('.habit-caret').classList.add('open');
-        habitRow.querySelector('.habit-accordion').classList.add('open');
+        accordion.classList.add('open');
+        if (!accordion.querySelector('.habit-inline-heatmap')) {
+            const habit = state.habits.find(h => h.id === habitId);
+            accordion.insertAdjacentHTML('beforeend', buildHeatmapContent(habit, computeLogicalToday()));
+        }
     }
 }
 
