@@ -373,7 +373,6 @@ footer {
 }
 .habit-dot.done       { background: var(--gvb-fg3); }
 .habit-dot.today.done { background: var(--gvb-fg1); }
-.habit-dot:disabled   { opacity: 0.4; }
 .habit-dots.weekly .habit-dot { border-radius: 2px; }
 
 .habit-bar {
