@@ -11,7 +11,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from habits_config import HABITS
 
-DATA_DIR     = Path.home() / ".local/share/data/personal_logs"
+DATA_DIR     = Path.home() / ".local/share/personal_logs"
 CSV_PATH     = DATA_DIR / "morning_log.csv"
 HABITS_CSV   = DATA_DIR / "habits.csv"
 SESSION_PATH = DATA_DIR / "session.json"
@@ -86,7 +86,7 @@ def habits_data():
         {k: h[k] for k in ("id", "label", "group", "freq", "criterion")}
         for h in HABITS if not h.get("retired", False)
     ]
-    return {"today": str(logical_today()), "habits": active, "rows": load_habits_rows(84)}
+    return {"habits": active, "rows": load_habits_rows(84)}
 
 
 def log_habit(date_str: str, habit_id: str, value: int):
