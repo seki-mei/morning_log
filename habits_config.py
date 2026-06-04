@@ -5,7 +5,7 @@ HABITS = [
         "group":     "Mind",
         "freq":      "daily",
         "criterion": "10+ minutes, eyes closed, no phone",
-        "retired":   False,
+        "active":    True,
     },
     {
         "id":        "reading",
@@ -13,7 +13,7 @@ HABITS = [
         "group":     "Mind",
         "freq":      "daily",
         "criterion": "30+ minutes of a book (not articles)",
-        "retired":   False,
+        "active":    True,
     },
     {
         "id":        "exercise",
@@ -21,7 +21,7 @@ HABITS = [
         "group":     "Body",
         "freq":      "daily",
         "criterion": "30+ minutes of intentional movement",
-        "retired":   False,
+        "active":    True,
     },
     {
         "id":        "stretching",
@@ -29,7 +29,7 @@ HABITS = [
         "group":     "Body",
         "freq":      "daily",
         "criterion": "10+ minutes of stretching or mobility work",
-        "retired":   False,
+        "active":    True,
     },
     {
         "id":        "long_walk",
@@ -37,6 +37,6 @@ HABITS = [
         "group":     "Body",
         "freq":      "weekly",
         "criterion": "60+ minute walk outdoors",
-        "retired":   False,
+        "active":    True,
     },
 ]

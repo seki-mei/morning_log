@@ -103,7 +103,7 @@ def load_habits_rows(days=84):
 def habits_data():
     active = [
         {k: h[k] for k in ("id", "label", "group", "freq", "criterion")}
-        for h in HABITS if not h.get("retired", False)
+        for h in HABITS if h.get("active", True)
     ]
     return {"habits": active, "rows": load_habits_rows()}
 
