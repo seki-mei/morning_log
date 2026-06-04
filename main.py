@@ -27,7 +27,6 @@ def _load_habits():
     return list(DEFAULT_HABITS)
 
 
-HABITS = _load_habits()
 STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
@@ -60,7 +59,7 @@ def ensure_csv():
 
 def ensure_habits_csv():
     HABITS_CSV.parent.mkdir(parents=True, exist_ok=True)
-    all_ids = ["date"] + [h["id"] for h in HABITS]
+    all_ids = ["date"] + [h["id"] for h in _load_habits()]
 
     if not HABITS_CSV.exists():
         with HABITS_CSV.open("w", newline="") as f:
@@ -103,7 +102,7 @@ def load_habits_rows(days=190):
 def habits_data():
     keys = ("id", "label", "group", "freq", "criterion")
     active = []
-    for h in HABITS:
+    for h in _load_habits():
         if not h.get("active", True):
             continue
         missing = [k for k in keys if k not in h]
