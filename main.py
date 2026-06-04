@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""
-Morning routine logger + habit tracker.
-Serves UI at http://localhost:8787
-"""
+"""Morning routine logger + habit tracker — serves UI at http://localhost:8787"""
 
 import csv
 import json
 from datetime import datetime, date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
 from habits_config import HABITS as DEFAULT_HABITS
 
 DATA_DIR     = Path.home() / ".local/share/personal_logs"
@@ -17,8 +15,24 @@ HABITS_CSV   = DATA_DIR / "habits.csv"
 HABITS_JSON  = DATA_DIR / "habits.json"
 SESSION_PATH = DATA_DIR / "session.json"
 
+STATIC_DIR  = Path(__file__).parent
+CSV_HEADERS = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
+PORT        = 8787
 
-def _load_habits():
+STATIC_FILES: dict[str, tuple[str, str]] = {
+    "/":          ("habits.html",  "text/html; charset=utf-8"),
+    "/morning":   ("morning.html", "text/html; charset=utf-8"),
+    "/style.css": ("style.css",    "text/css; charset=utf-8"),
+    "/app.js":    ("app.js",       "application/javascript; charset=utf-8"),
+    "/habits.js": ("habits.js",    "application/javascript; charset=utf-8"),
+}
+
+# Skipped after the first successful ensure_habits_csv() call each process run.
+_habits_csv_ready = False
+
+
+def _load_habits() -> list[dict[str, Any]]:
+    """Read habits.json if present, falling back to compiled-in defaults."""
     if HABITS_JSON.exists():
         try:
             return json.loads(HABITS_JSON.read_text())
@@ -27,38 +41,21 @@ def _load_habits():
     return list(DEFAULT_HABITS)
 
 
-STATIC_DIR   = Path(__file__).parent
-CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
-PORT         = 8787
-_habits_csv_ready = False
-
-STATIC_FILES = {
-    "/":          ("habits.html",  "text/html; charset=utf-8"),
-    "/morning":   ("morning.html", "text/html; charset=utf-8"),
-    "/style.css": ("style.css",    "text/css; charset=utf-8"),
-    "/app.js":    ("app.js",       "application/javascript; charset=utf-8"),
-    "/habits.js": ("habits.js",    "application/javascript; charset=utf-8"),
-}
-
-
-def logical_today():
-    return date.today()
-
-
-def ensure_habits_json():
+def ensure_habits_json() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not HABITS_JSON.exists():
         HABITS_JSON.write_text(json.dumps(DEFAULT_HABITS, indent=2))
 
 
-def ensure_csv():
+def ensure_csv() -> None:
     CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not CSV_PATH.exists():
         with CSV_PATH.open("w", newline="") as f:
             csv.writer(f).writerow(CSV_HEADERS)
 
 
-def ensure_habits_csv():
+def ensure_habits_csv() -> None:
+    """Create habits.csv if absent, or backfill new columns for habits added since last run."""
     HABITS_CSV.parent.mkdir(parents=True, exist_ok=True)
     all_ids = ["date"] + [h["id"] for h in _load_habits()]
 
@@ -87,9 +84,13 @@ def ensure_habits_csv():
         writer.writerows(rows)
 
 
-def load_habits_rows(days=190):
-    cutoff = str(logical_today() - timedelta(days=days - 1))
-    rows = {}
+def load_habits_rows(days: int = 190) -> dict[str, dict[str, int]]:
+    """Return {date: {habit_id: 0|1}} for the last `days` days.
+
+    Values are stored as "1"/"" in CSV; anything other than "1" is treated as 0.
+    """
+    cutoff = str(date.today() - timedelta(days=days - 1))
+    rows: dict[str, dict[str, int]] = {}
     if not HABITS_CSV.exists():
         return rows
     with HABITS_CSV.open("r", newline="") as f:
@@ -100,9 +101,9 @@ def load_habits_rows(days=190):
     return rows
 
 
-def habits_data():
+def habits_data() -> dict[str, Any]:
     keys = ("id", "label", "group", "freq", "criterion")
-    active = []
+    active: list[dict[str, Any]] = []
     for h in _load_habits():
         if not h.get("active", True):
             continue
@@ -114,13 +115,13 @@ def habits_data():
     return {"habits": active, "rows": load_habits_rows()}
 
 
-def log_habit(date_str: str, habit_id: str, value: int):
+def log_habit(date_str: str, habit_id: str, value: int) -> None:
     global _habits_csv_ready
     if not _habits_csv_ready:
         ensure_habits_csv()
         _habits_csv_ready = True
-    rows = {}
 
+    rows: dict[str, dict[str, str]] = {}
     with HABITS_CSV.open("r", newline="") as f:
         reader = csv.DictReader(f)
         fieldnames = list(reader.fieldnames)
@@ -130,6 +131,7 @@ def log_habit(date_str: str, habit_id: str, value: int):
     if date_str not in rows:
         rows[date_str] = {"date": date_str, **{f: "" for f in fieldnames if f != "date"}}
 
+    # Store "1" for done, "" for not-done — never "0", so absence and explicit false are identical.
     rows[date_str][habit_id] = "1" if value == 1 else ""
 
     with HABITS_CSV.open("w", newline="") as f:
@@ -139,7 +141,7 @@ def log_habit(date_str: str, habit_id: str, value: int):
             writer.writerow(rows[d])
 
 
-def load_session():
+def load_session() -> dict[str, Any]:
     try:
         data = json.loads(SESSION_PATH.read_text())
         if data.get("date") != str(date.today()):
@@ -149,11 +151,11 @@ def load_session():
         return {}
 
 
-def save_session(data: dict):
+def save_session(data: dict[str, Any]) -> None:
     SESSION_PATH.write_text(json.dumps({**data, "date": str(date.today())}))
 
 
-def delete_session():
+def delete_session() -> None:
     SESSION_PATH.unlink(missing_ok=True)
 
 
@@ -161,7 +163,7 @@ def hhmm(iso: str) -> str:
     return datetime.fromisoformat(iso).strftime("%H:%M")
 
 
-def append_row(data: dict):
+def append_row(data: dict[str, Any]) -> None:
     woke = datetime.fromisoformat(data["woke_up"])
     row = [
         woke.strftime("%Y-%m-%d"),
@@ -176,10 +178,10 @@ def append_row(data: dict):
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
+    def log_message(self, fmt: str, *args: Any) -> None:
         pass
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         if self.path == "/session":
             self._respond(200, "application/json", json.dumps(load_session()).encode())
             return
@@ -198,7 +200,7 @@ class Handler(BaseHTTPRequestHandler):
 
         self._json(404, {"ok": False, "error": "not found"})
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", 0))
         try:
             data = json.loads(self.rfile.read(length))
@@ -225,21 +227,21 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._json(404, {"ok": False, "error": "not found"})
 
-    def do_DELETE(self):
+    def do_DELETE(self) -> None:
         if self.path == "/session":
             delete_session()
             self._json(200, {"ok": True})
         else:
             self._json(404, {"ok": False, "error": "not found"})
 
-    def _respond(self, code: int, content_type: str, body: bytes):
+    def _respond(self, code: int, content_type: str, body: bytes) -> None:
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    def _json(self, code: int, obj: dict):
+    def _json(self, code: int, obj: dict[str, Any]) -> None:
         self._respond(code, "application/json", json.dumps(obj).encode())
 
 

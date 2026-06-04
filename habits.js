@@ -1,12 +1,22 @@
 'use strict';
 
+/** @type {{ habits: Habit[], rows: Record<string, Record<string, number>> } | null} */
 let state = null;
+
+/** @type {Set<string>} */
 const expandedHabits = new Set();
 
+/**
+ * @typedef {{ id: string, label: string, group: string, freq: 'daily'|'weekly', criterion: string }} Habit
+ * @typedef {{ date: string, done: boolean }} DotEntry
+ */
+
+/** @returns {string} today's date as YYYY-MM-DD */
 function getToday() {
     return fmtDate(new Date());
 }
 
+/** @param {Date} d @returns {string} */
 function fmtDate(d) {
     return [
         d.getFullYear(),
@@ -15,19 +25,32 @@ function fmtDate(d) {
     ].join('-');
 }
 
+/**
+ * @param {string} dateStr YYYY-MM-DD
+ * @param {number} n
+ * @returns {string}
+ */
 function addDays(dateStr, n) {
+    // T12:00:00 anchors to noon so DST transitions don't shift the date.
     const d = new Date(dateStr + 'T12:00:00');
     d.setDate(d.getDate() + n);
     return fmtDate(d);
 }
 
+/** @param {string} dateStr @returns {string} Monday of the ISO week containing dateStr */
 function weekKey(dateStr) {
     const d = new Date(dateStr + 'T12:00:00');
     const dow = d.getDay();
+    // Sunday (0) is -6 from Monday; Mon–Sat are 1–6, offset is 1–dow.
     d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
     return fmtDate(d);
 }
 
+/**
+ * @param {string} habitId
+ * @param {string} mondayStr YYYY-MM-DD of the week's Monday
+ * @returns {boolean}
+ */
 function isWeekDone(habitId, mondayStr) {
     for (let i = 0; i < 7; i++) {
         const d = addDays(mondayStr, i);
@@ -36,6 +59,13 @@ function isWeekDone(habitId, mondayStr) {
     return false;
 }
 
+/**
+ * @param {string} habitId
+ * @param {'daily'|'weekly'} freq
+ * @param {string} todayStr
+ * @param {number} count
+ * @returns {DotEntry[]} newest first (index 0 = today/this week)
+ */
 function computeHistory(habitId, freq, todayStr, count) {
     return Array.from({ length: count }, (_, i) => {
         if (freq === 'daily') {
@@ -47,15 +77,21 @@ function computeHistory(habitId, freq, todayStr, count) {
     });
 }
 
+/** @param {string} habitId @param {'daily'|'weekly'} freq @param {string} today @returns {DotEntry[]} */
 function computeDots(habitId, freq, today) {
     return computeHistory(habitId, freq, today, 7);
 }
 
+/** @param {string} habitId @param {'daily'|'weekly'} freq @param {string} today @returns {DotEntry[]} */
 function computeBar(habitId, freq, today) {
     return computeHistory(habitId, freq, today, freq === 'daily' ? 30 : 12);
 }
 
-
+/**
+ * @param {Habit} habit
+ * @param {string} today YYYY-MM-DD
+ * @returns {string} HTML string
+ */
 function buildHeatmapContent(habit, today) {
     const WEEKS = 26;
     const todayDate = new Date(today + 'T12:00:00');
@@ -68,6 +104,7 @@ function buildHeatmapContent(habit, today) {
         const days = [];
         for (let d = 0; d < 7; d++) {
             const dt = new Date(mon);
+            // Offset from Monday of current week: go back w weeks, then forward d days.
             dt.setDate(dt.getDate() - w * 7 + d);
             const ds = fmtDate(dt);
             const isFuture = dt > todayDate;
@@ -87,12 +124,18 @@ function buildHeatmapContent(habit, today) {
     return `<div class="habit-inline-heatmap">${grid}</div>`;
 }
 
+/**
+ * @param {Habit} habit
+ * @param {string} today YYYY-MM-DD
+ * @returns {string} HTML string
+ */
 function renderHabitRow(habit, today) {
     const { id, label, freq, criterion } = habit;
     const isOpen = expandedHabits.has(id);
 
     const dotsHtml = computeDots(id, freq, today).map((dot, i) => {
         const cls = ['habit-dot', i === 0 && 'today', i === 1 && 'yesterday', dot.done && 'done'].filter(Boolean).join(' ');
+        // Only today (0) and yesterday (1) are interactive.
         if (i <= 1) return `<button class="${cls}" data-dot-habit="${id}" data-dot-date="${dot.date}"></button>`;
         return `<span class="${cls}"></span>`;
     }).join('');
@@ -150,6 +193,10 @@ function attachHandlers() {
     });
 }
 
+/**
+ * @param {string} habitId
+ * @param {string} dateStr YYYY-MM-DD
+ */
 async function toggleDot(habitId, dateStr) {
     const btn = document.querySelector(`[data-dot-habit="${habitId}"][data-dot-date="${dateStr}"]`);
     if (btn) btn.disabled = true;
@@ -171,20 +218,19 @@ async function toggleDot(habitId, dateStr) {
     }
 }
 
+/** @param {string} habitId */
 function toggleAccordion(habitId) {
-    // Close any currently open accordion
+    // Snapshot the Set before iterating — deleting during for..of skips not-yet-visited entries.
     for (const openId of [...expandedHabits]) {
         if (openId === habitId) continue;
         const openToggle = document.querySelector(`[data-accordion="${openId}"]`);
         if (!openToggle) continue;
-        const openRow = openToggle.closest('.habit-row');
-        openRow.querySelector('.habit-accordion').classList.remove('open');
+        openToggle.closest('.habit-row').querySelector('.habit-accordion').classList.remove('open');
         expandedHabits.delete(openId);
     }
 
     const toggle = document.querySelector(`[data-accordion="${habitId}"]`);
-    const habitRow = toggle.closest('.habit-row');
-    const accordion = habitRow.querySelector('.habit-accordion');
+    const accordion = toggle.closest('.habit-row').querySelector('.habit-accordion');
     if (expandedHabits.has(habitId)) {
         expandedHabits.delete(habitId);
         accordion.classList.remove('open');
