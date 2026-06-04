@@ -117,21 +117,18 @@ function renderHabitRow(habit, today) {
         .map(s => `<span class="habit-bar-seg${s.done ? ' done' : ''}"></span>`)
         .join('');
 
-    const heatmapHtml = isOpen ? buildHeatmapContent(habit, today) : '';
-    const dotsCls = freq === 'weekly' ? 'habit-dots weekly' : 'habit-dots';
-
     return `<div class="habit-row">
   <div class="habit-label-row">
     <button class="habit-label-toggle" data-accordion="${id}">
       <span class="habit-caret${openCls}">▶</span>
       <span class="habit-name">${label}</span>
     </button>
-    <div class="${dotsCls}">${dotsHtml}</div>
+    <div class="habit-dots${freq === 'weekly' ? ' weekly' : ''}">${dotsHtml}</div>
   </div>
   <div class="habit-bar">${barHtml}</div>
   <div class="habit-accordion${openCls}">
     <div class="habit-criterion">${criterion}</div>
-    ${heatmapHtml}
+    ${isOpen ? buildHeatmapContent(habit, today) : ''}
   </div>
 </div>`;
 }

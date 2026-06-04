@@ -270,23 +270,6 @@ h1 {
 
 /* ── Habit tracker ── */
 
-.morning-btn {
-	display: inline-block;
-	font-family: var(--sans);
-	font-weight: 700;
-	font-size: 0.72rem;
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	color: var(--gvb-fg3);
-	text-decoration: none;
-	border: 1px solid var(--gvb-bg3);
-	border-radius: 2px;
-	padding: 0.35rem 0.75rem;
-	margin-top: 0.5rem;
-	background: var(--gvb-bg2);
-	-webkit-tap-highlight-color: transparent;
-}
-.morning-btn:hover { border-color: var(--gvb-fg4); color: var(--gvb-fg1); }
 
 .group-header {
 	font-variant: small-caps;
@@ -327,8 +310,6 @@ h1 {
 	-webkit-tap-highlight-color: transparent;
 }
 
-.habit-dots { margin-left: auto; }
-
 .habit-caret {
 	font-size: 0.6rem;
 	color: var(--gvb-fg4);
@@ -353,6 +334,7 @@ h1 {
 	align-items: center;
 	gap: 5px;
 	flex-shrink: 0;
+	margin-left: auto;
 }
 
 .habit-dot {
@@ -399,55 +381,11 @@ h1 {
 	line-height: 1.5;
 }
 
-.habit-heatmap-btn {
-	width: auto;
-	padding: 0.3rem 0.6rem;
-	font-size: 0.7rem;
-	margin-left: 1.1rem;
-	margin-bottom: 0.4rem;
-}
-
 .habit-inline-heatmap {
 	margin-left: 1.1rem;
 	margin-top: 0.5rem;
 	overflow-x: auto;
 	padding-bottom: 0.4rem;
-}
-
-.overlay {
-	position: fixed;
-	inset: 0;
-	background: rgba(29, 32, 33, 0.9);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 100;
-	padding: 1rem;
-}
-.overlay.hidden { display: none; }
-
-.heatmap-card {
-	background: var(--gvb-bg1);
-	border: 1px solid var(--gvb-bg3);
-	border-radius: 3px;
-	padding: 1.25rem;
-	max-width: 90vw;
-	overflow-x: auto;
-}
-
-.heatmap-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 0.6rem;
-	color: var(--gvb-fg1);
-	font-size: 0.95rem;
-}
-
-.heatmap-close {
-	width: auto;
-	padding: 0.25rem 0.5rem;
-	font-size: 0.75rem;
 }
 
 .heatmap-months {

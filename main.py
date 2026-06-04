@@ -86,7 +86,7 @@ def habits_data():
         {k: h[k] for k in ("id", "label", "group", "freq", "criterion")}
         for h in HABITS if not h.get("retired", False)
     ]
-    return {"habits": active, "rows": load_habits_rows(84)}
+    return {"habits": active, "rows": load_habits_rows()}
 
 
 def log_habit(date_str: str, habit_id: str, value: int):
