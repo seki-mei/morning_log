@@ -58,15 +58,9 @@ function computeBar(habitId, freq, today) {
     });
 }
 
-function getHeatmapWeeks() {
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const cardWidth = Math.min(440, window.innerWidth - 2 * rem);
-    const available = cardWidth - (2 * 1.3 + 1.1) * rem;
-    return Math.max(4, Math.floor((available + 2) / 12));
-}
 
 function buildHeatmapContent(habit, today) {
-    const WEEKS = getHeatmapWeeks();
+    const WEEKS = 26;
     const todayDate = new Date(today + 'T12:00:00');
     const mon = new Date(todayDate);
     const dow = mon.getDay();
@@ -85,12 +79,6 @@ function buildHeatmapContent(habit, today) {
         cols.push(days);
     }
 
-    const monthRow = '<div class="heatmap-months">' +
-        cols.map(days => {
-            const d = new Date(days[0].ds + 'T12:00:00');
-            return `<span>${d.getDate() <= 7 ? d.toLocaleDateString('en-US', { month: 'short' }) : ''}</span>`;
-        }).join('') + '</div>';
-
     let grid = '<div class="heatmap-grid">';
     for (let w = 0; w < WEEKS; w++)
         for (let d = 0; d < 7; d++) {
@@ -99,7 +87,7 @@ function buildHeatmapContent(habit, today) {
         }
     grid += '</div>';
 
-    return `<div class="habit-inline-heatmap">${monthRow}${grid}</div>`;
+    return `<div class="habit-inline-heatmap">${grid}</div>`;
 }
 
 function renderHabitRow(habit, today) {
@@ -183,6 +171,17 @@ async function toggleToday(habitId) {
 }
 
 function toggleAccordion(habitId) {
+    // Close any currently open accordion
+    for (const openId of expandedHabits) {
+        if (openId === habitId) continue;
+        const openToggle = document.querySelector(`[data-accordion="${openId}"]`);
+        if (!openToggle) continue;
+        const openRow = openToggle.closest('.habit-row');
+        openRow.querySelector('.habit-caret').classList.remove('open');
+        openRow.querySelector('.habit-accordion').classList.remove('open');
+        expandedHabits.delete(openId);
+    }
+
     const toggle = document.querySelector(`[data-accordion="${habitId}"]`);
     const habitRow = toggle.closest('.habit-row');
     const accordion = habitRow.querySelector('.habit-accordion');

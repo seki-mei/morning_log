@@ -9,12 +9,25 @@ import json
 from datetime import datetime, date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from habits_config import HABITS
+from habits_config import HABITS as DEFAULT_HABITS
 
 DATA_DIR     = Path.home() / ".local/share/personal_logs"
 CSV_PATH     = DATA_DIR / "morning_log.csv"
 HABITS_CSV   = DATA_DIR / "habits.csv"
+HABITS_JSON  = DATA_DIR / "habits.json"
 SESSION_PATH = DATA_DIR / "session.json"
+
+
+def _load_habits():
+    if HABITS_JSON.exists():
+        try:
+            return json.loads(HABITS_JSON.read_text())
+        except Exception:
+            pass
+    return list(DEFAULT_HABITS)
+
+
+HABITS = _load_habits()
 STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
@@ -30,6 +43,12 @@ STATIC_FILES = {
 
 def logical_today():
     return (datetime.now() - timedelta(hours=4)).date()
+
+
+def ensure_habits_json():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not HABITS_JSON.exists():
+        HABITS_JSON.write_text(json.dumps(DEFAULT_HABITS, indent=2))
 
 
 def ensure_csv():
@@ -216,9 +235,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    ensure_habits_json()
     ensure_csv()
     ensure_habits_csv()
-    print(f"Habit tracker + morning log → http://0.0.0.0:{PORT}")
+    print(f"Habits  → http://localhost:{PORT}/")
+    print(f"Morning → http://localhost:{PORT}/morning")
     print(f"Data:    {DATA_DIR}")
     print(f"Session: {SESSION_PATH}")
     print(f"Static:  {STATIC_DIR}")
