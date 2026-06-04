@@ -174,8 +174,8 @@ h1 {
 }
 
 .dest-btn.selected, .dest-btn:active {
-	background: var(--gvb-aqua);
-	border-color: var(--gvb-aqua2);
+	background: var(--gvb-fg1);
+	border-color: var(--gvb-fg2);
 	color: var(--gvb-bg0);
 }
 
@@ -371,8 +371,8 @@ footer {
 	padding: 0;
 	-webkit-tap-highlight-color: transparent;
 }
-.habit-dot.done       { background: var(--gvb-aqua2); }
-.habit-dot.today.done { background: var(--gvb-aqua); }
+.habit-dot.done       { background: var(--gvb-fg3); }
+.habit-dot.today.done { background: var(--gvb-fg1); }
 .habit-dots.weekly .habit-dot { border-radius: 2px; }
 
 .habit-bar {
@@ -382,7 +382,7 @@ footer {
 	margin-top: 5px;
 }
 .habit-bar-seg      { flex: 1; background: var(--gvb-bg2); border-radius: 1px; }
-.habit-bar-seg.done { background: rgba(104, 157, 106, 0.6); }
+.habit-bar-seg.done { background: var(--gvb-fg3); }
 
 .habit-accordion {
 	max-height: 0;
@@ -420,4 +420,4 @@ footer {
 	background: var(--gvb-bg2);
 	border-radius: 1px;
 }
-.heatmap-cell.done { background: var(--gvb-aqua); }
+.heatmap-cell.done { background: var(--gvb-fg1); }
