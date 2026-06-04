@@ -22,8 +22,8 @@ def _load_habits():
     if HABITS_JSON.exists():
         try:
             return json.loads(HABITS_JSON.read_text())
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Warning: could not parse {HABITS_JSON}: {e}; using defaults")
     return list(DEFAULT_HABITS)
 
 
@@ -101,10 +101,16 @@ def load_habits_rows(days=190):
 
 
 def habits_data():
-    active = [
-        {k: h[k] for k in ("id", "label", "group", "freq", "criterion")}
-        for h in HABITS if h.get("active", True)
-    ]
+    keys = ("id", "label", "group", "freq", "criterion")
+    active = []
+    for h in HABITS:
+        if not h.get("active", True):
+            continue
+        missing = [k for k in keys if k not in h]
+        if missing:
+            print(f"Warning: habit {h.get('id', '?')!r} missing keys {missing}, skipping")
+            continue
+        active.append({k: h[k] for k in keys})
     return {"habits": active, "rows": load_habits_rows()}
 
 

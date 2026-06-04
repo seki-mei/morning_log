@@ -154,23 +154,30 @@ function attachHandlers() {
 }
 
 async function toggleToday(habitId) {
+    const btn = document.querySelector(`[data-today-dot="${habitId}"]`);
+    if (btn) btn.disabled = true;
     const today = computeLogicalToday();
     if (!state.rows[today]) state.rows[today] = {};
     const newVal = state.rows[today][habitId] ? 0 : 1;
-    const res = await fetch('/habits_log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: today, habit_id: habitId, value: newVal }),
-    });
-    if ((await res.json()).ok) {
-        state.rows[today][habitId] = newVal;
-        render();
+    try {
+        const res = await fetch('/habits_log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: today, habit_id: habitId, value: newVal }),
+        });
+        if ((await res.json()).ok) {
+            state.rows[today][habitId] = newVal;
+            render();
+        }
+    } finally {
+        const b = document.querySelector(`[data-today-dot="${habitId}"]`);
+        if (b) b.disabled = false;
     }
 }
 
 function toggleAccordion(habitId) {
     // Close any currently open accordion
-    for (const openId of expandedHabits) {
+    for (const openId of [...expandedHabits]) {
         if (openId === habitId) continue;
         const openToggle = document.querySelector(`[data-accordion="${openId}"]`);
         if (!openToggle) continue;
@@ -197,9 +204,13 @@ function toggleAccordion(habitId) {
 
 async function loadHabits() {
     document.getElementById('app').textContent = 'loading…';
-    const res = await fetch('/habits_data');
-    state = await res.json();
-    render();
+    try {
+        const res = await fetch('/habits_data');
+        state = await res.json();
+        render();
+    } catch (e) {
+        document.getElementById('app').textContent = `error loading habits: ${e.message}`;
+    }
 }
 
 loadHabits();
