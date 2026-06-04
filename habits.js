@@ -37,8 +37,8 @@ function isWeekDone(habitId, mondayStr) {
     return false;
 }
 
-function computeDots(habitId, freq, today) {
-    return Array.from({ length: 7 }, (_, i) => {
+function computeHistory(habitId, freq, today, count) {
+    return Array.from({ length: count }, (_, i) => {
         if (freq === 'daily') {
             const d = addDays(today, -i);
             return { done: !!(state.rows[d] && state.rows[d][habitId]) };
@@ -47,15 +47,12 @@ function computeDots(habitId, freq, today) {
     });
 }
 
+function computeDots(habitId, freq, today) {
+    return computeHistory(habitId, freq, today, 7);
+}
+
 function computeBar(habitId, freq, today) {
-    const count = freq === 'daily' ? 30 : 12;
-    return Array.from({ length: count }, (_, i) => {
-        if (freq === 'daily') {
-            const d = addDays(today, -i);
-            return { done: !!(state.rows[d] && state.rows[d][habitId]) };
-        }
-        return { done: isWeekDone(habitId, weekKey(addDays(today, -i * 7))) };
-    });
+    return computeHistory(habitId, freq, today, freq === 'daily' ? 30 : 12);
 }
 
 

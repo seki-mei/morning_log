@@ -30,6 +30,7 @@ def _load_habits():
 STATIC_DIR   = Path(__file__).parent
 CSV_HEADERS  = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destination", "notes"]
 PORT         = 8787
+_habits_csv_ready = False
 
 STATIC_FILES = {
     "/":          ("habits.html",  "text/html; charset=utf-8"),
@@ -114,7 +115,10 @@ def habits_data():
 
 
 def log_habit(date_str: str, habit_id: str, value: int):
-    ensure_habits_csv()
+    global _habits_csv_ready
+    if not _habits_csv_ready:
+        ensure_habits_csv()
+        _habits_csv_ready = True
     rows = {}
 
     with HABITS_CSV.open("r", newline="") as f:
@@ -243,6 +247,7 @@ if __name__ == "__main__":
     ensure_habits_json()
     ensure_csv()
     ensure_habits_csv()
+    _habits_csv_ready = True
     print(f"Habits  → http://localhost:{PORT}/")
     print(f"Morning → http://localhost:{PORT}/morning")
     print(f"Data:    {DATA_DIR}")
