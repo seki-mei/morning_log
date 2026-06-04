@@ -322,6 +322,8 @@ footer {
 	display: flex;
 	align-items: center;
 	gap: 0.45rem;
+	flex: 1;
+	min-width: 0;
 	cursor: pointer;
 	user-select: none;
 	border: none;
@@ -349,7 +351,6 @@ footer {
 	align-items: center;
 	gap: 5px;
 	flex-shrink: 0;
-	margin-left: auto;
 }
 
 .habit-dot {
