@@ -289,6 +289,18 @@ footer {
 .footer-link:hover { color: var(--gvb-fg2); }
 .footer-sep { color: var(--gvb-bg4); margin: 0 0.5rem; font-size: 0.7rem; }
 
+.nav-link {
+	display: block;
+	padding: 0.6rem 0.8rem;
+	color: var(--gvb-fg1);
+	text-decoration: none;
+	font-family: var(--sans);
+	font-size: 1rem;
+	border-bottom: 1px solid var(--gvb-bg3);
+}
+.nav-link:last-child { border-bottom: none; }
+.nav-link:hover { color: var(--gvb-fg0); background: var(--gvb-bg1); }
+
 /* ── Habit tracker ── */
 
 

@@ -20,7 +20,8 @@ CSV_HEADERS = ["date", "woke_up", "out_of_bed", "finished_breakfast", "destinati
 PORT        = 8787
 
 STATIC_FILES: dict[str, tuple[str, str]] = {
-    "/":          ("habits.html",  "text/html; charset=utf-8"),
+    "/":          ("index.html",   "text/html; charset=utf-8"),
+    "/habits":    ("habits.html",  "text/html; charset=utf-8"),
     "/morning":   ("morning.html", "text/html; charset=utf-8"),
     "/style.css": ("style.css",    "text/css; charset=utf-8"),
     "/app.js":    ("app.js",       "application/javascript; charset=utf-8"),
@@ -250,7 +251,8 @@ if __name__ == "__main__":
     ensure_csv()
     ensure_habits_csv()
     _habits_csv_ready = True
-    print(f"Habits  → http://localhost:{PORT}/")
+    print(f"Home    → http://localhost:{PORT}/")
+    print(f"Habits  → http://localhost:{PORT}/habits")
     print(f"Morning → http://localhost:{PORT}/morning")
     print(f"Data:    {DATA_DIR}")
     print(f"Session: {SESSION_PATH}")
