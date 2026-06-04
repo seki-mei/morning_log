@@ -361,15 +361,18 @@ footer {
 	background: var(--gvb-bg2);
 	flex-shrink: 0;
 	display: inline-block;
+	border: none;
+	padding: 0;
+	cursor: default;
+}
+.habit-dot.today, .habit-dot.yesterday {
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 .habit-dot.today {
 	width: 26px;
 	height: 26px;
 	background: var(--gvb-bg3);
-	cursor: pointer;
-	border: none;
-	padding: 0;
-	-webkit-tap-highlight-color: transparent;
 }
 .habit-dot.done       { background: var(--gvb-fg3); }
 .habit-dot.today.done { background: var(--gvb-fg1); }
