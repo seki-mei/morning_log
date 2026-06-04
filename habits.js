@@ -38,7 +38,7 @@ function isWeekDone(habitId, mondayStr) {
 }
 
 function computeDots(habitId, freq, today) {
-    return Array.from({ length: 4 }, (_, i) => {
+    return Array.from({ length: 7 }, (_, i) => {
         if (freq === 'daily') {
             const d = addDays(today, -i);
             return { done: !!(state.rows[d] && state.rows[d][habitId]) };
@@ -58,30 +58,73 @@ function computeBar(habitId, freq, today) {
     });
 }
 
+function buildHeatmapContent(habit, today) {
+    const WEEKS = 52;
+    const todayDate = new Date(today + 'T12:00:00');
+    const mon = new Date(todayDate);
+    const dow = mon.getDay();
+    mon.setDate(mon.getDate() + (dow === 0 ? -6 : 1 - dow));
+
+    const cols = [];
+    for (let w = WEEKS - 1; w >= 0; w--) {
+        const days = [];
+        for (let d = 0; d < 7; d++) {
+            const dt = new Date(mon);
+            dt.setDate(dt.getDate() - w * 7 + d);
+            const ds = fmtDate(dt);
+            const isFuture = dt > todayDate;
+            days.push({ ds, done: !isFuture && !!(state.rows[ds] && state.rows[ds][habit.id]) });
+        }
+        cols.push(days);
+    }
+
+    const monthRow = '<div class="heatmap-months">' +
+        cols.map(days => {
+            const d = new Date(days[0].ds + 'T12:00:00');
+            return `<span>${d.getDate() <= 7 ? d.toLocaleDateString('en-US', { month: 'short' }) : ''}</span>`;
+        }).join('') + '</div>';
+
+    let grid = '<div class="heatmap-grid">';
+    for (let w = 0; w < WEEKS; w++)
+        for (let d = 0; d < 7; d++) {
+            const c = cols[w][d];
+            grid += `<div class="heatmap-cell${c.done ? ' done' : ''}" title="${c.ds}"></div>`;
+        }
+    grid += '</div>';
+
+    return `<div class="habit-inline-heatmap">${monthRow}${grid}</div>`;
+}
+
 function renderHabitRow(habit, today) {
     const { id, label, freq, criterion } = habit;
-    const openCls = expandedHabits.has(id) ? ' open' : '';
+    const isOpen = expandedHabits.has(id);
+    const openCls = isOpen ? ' open' : '';
 
     const dotsHtml = computeDots(id, freq, today).map((dot, i) => {
         const cls = ['habit-dot', i === 0 && 'today', dot.done && 'done'].filter(Boolean).join(' ');
-        const attr = i === 0 ? ` data-today-dot="${id}"` : '';
-        return `<span class="${cls}"${attr}></span>`;
+        if (i === 0) return `<button class="${cls}" data-today-dot="${id}"></button>`;
+        return `<span class="${cls}"></span>`;
     }).join('');
 
     const barHtml = computeBar(id, freq, today)
         .map(s => `<span class="habit-bar-seg${s.done ? ' done' : ''}"></span>`)
         .join('');
 
+    const heatmapHtml = isOpen ? buildHeatmapContent(habit, today) : '';
+    const dotsCls = freq === 'weekly' ? 'habit-dots weekly' : 'habit-dots';
+
     return `<div class="habit-row">
-  <div class="habit-label-row" data-accordion="${id}">
-    <span class="habit-caret${openCls}">▶</span>
-    <span class="habit-name">${label}</span>
-    <div class="habit-dots">${dotsHtml}</div>
+  <div class="habit-label-row">
+    <button class="habit-label-toggle" data-accordion="${id}">
+      <span class="habit-caret${openCls}">▶</span>
+      <span class="habit-name">${label}</span>
+    </button>
+    <div class="${dotsCls}">${dotsHtml}</div>
   </div>
   <div class="habit-bar">${barHtml}</div>
   <div class="habit-accordion${openCls}">
     <div class="habit-criterion">${criterion}</div>
-    <button class="ghost-btn habit-heatmap-btn" data-heatmap="${id}">[ heatmap ]</button>
+    ${heatmapHtml}
   </div>
 </div>`;
 }
@@ -118,9 +161,6 @@ function attachHandlers() {
     document.querySelectorAll('[data-accordion]').forEach(el => {
         el.addEventListener('click', () => toggleAccordion(el.dataset.accordion));
     });
-    document.querySelectorAll('[data-heatmap]').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); openHeatmap(btn.dataset.heatmap); });
-    });
 }
 
 async function toggleToday(habitId) {
@@ -139,8 +179,8 @@ async function toggleToday(habitId) {
 }
 
 function toggleAccordion(habitId) {
-    const labelRow = document.querySelector(`[data-accordion="${habitId}"]`);
-    const habitRow = labelRow.closest('.habit-row');
+    const toggle = document.querySelector(`[data-accordion="${habitId}"]`);
+    const habitRow = toggle.closest('.habit-row');
     if (expandedHabits.has(habitId)) {
         expandedHabits.delete(habitId);
         habitRow.querySelector('.habit-caret').classList.remove('open');
@@ -151,71 +191,6 @@ function toggleAccordion(habitId) {
         habitRow.querySelector('.habit-accordion').classList.add('open');
     }
 }
-
-function openHeatmap(habitId) {
-    const habit = state.habits.find(h => h.id === habitId);
-    const today = computeLogicalToday();
-    const overlay = document.getElementById('overlay');
-    overlay.innerHTML = buildHeatmapCard(habit, today);
-    overlay.classList.remove('hidden');
-    overlay.querySelector('.heatmap-close').addEventListener('click', e => {
-        e.stopPropagation();
-        closeHeatmap();
-    });
-}
-
-function closeHeatmap() {
-    const overlay = document.getElementById('overlay');
-    overlay.classList.add('hidden');
-    overlay.innerHTML = '';
-}
-
-function buildHeatmapCard(habit, today) {
-    const WEEKS = 52;
-    const todayDate = new Date(today + 'T12:00:00');
-    const mon = new Date(todayDate);
-    const dow = mon.getDay();
-    mon.setDate(mon.getDate() + (dow === 0 ? -6 : 1 - dow));
-
-    // Build columns oldest→newest (col 0 = 51 weeks ago, col 51 = current week)
-    const cols = [];
-    for (let w = WEEKS - 1; w >= 0; w--) {
-        const days = [];
-        for (let d = 0; d < 7; d++) {
-            const dt = new Date(mon);
-            dt.setDate(dt.getDate() - w * 7 + d);
-            const ds = fmtDate(dt);
-            const isFuture = dt > todayDate;
-            days.push({ ds, done: !isFuture && !!(state.rows[ds] && state.rows[ds][habit.id]) });
-        }
-        cols.push(days);
-    }
-
-    const monthRow = '<div class="heatmap-months">' +
-        cols.map(days => {
-            const d = new Date(days[0].ds + 'T12:00:00');
-            return `<span>${d.getDate() <= 7 ? d.toLocaleDateString('en-US', { month: 'short' }) : ''}</span>`;
-        }).join('') + '</div>';
-
-    let grid = '<div class="heatmap-grid">';
-    for (let w = 0; w < WEEKS; w++)
-        for (let d = 0; d < 7; d++) {
-            const c = cols[w][d];
-            grid += `<div class="heatmap-cell${c.done ? ' done' : ''}" title="${c.ds}"></div>`;
-        }
-    grid += '</div>';
-
-    return `<div class="heatmap-card" onclick="event.stopPropagation()">
-  <div class="heatmap-header">
-    <span>${habit.label}</span>
-    <button class="ghost-btn heatmap-close">✕</button>
-  </div>
-  ${monthRow}
-  ${grid}
-</div>`;
-}
-
-document.getElementById('overlay').addEventListener('click', closeHeatmap);
 
 async function loadHabits() {
     const res = await fetch('/habits_data');
